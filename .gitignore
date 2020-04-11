@@ -1,0 +1,7 @@
+# compilation output
+target
+
+# intellij files
+.idea
+JsonResourceAnalyzer.iml
+
