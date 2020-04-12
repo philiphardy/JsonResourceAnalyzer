@@ -139,7 +139,7 @@ public class ArgParser {
 
   private void setOutputFile(String outputArg) {
     outputFile = new File(outputArg);
-    if (file.exists() && !file.canWrite()) {
+    if (outputFile.exists() && !outputFile.canWrite()) {
       System.err.println(ErrorMessages.INVALID_OUTPUT_FILE);
       System.exit(ErrorCode.INVALID_OUTPUT_FILE.getValue());
     }
