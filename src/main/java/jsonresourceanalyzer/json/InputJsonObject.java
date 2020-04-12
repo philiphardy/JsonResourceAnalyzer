@@ -9,7 +9,7 @@ public class InputJsonObject {
   private static final String SIZE = "size";
   private static final String URL = "url";
 
-  private static HashMap<String, Class<?>> validPropertyNames;
+  protected static HashMap<String, Class<?>> validPropertyNames;
 
   static {
     validPropertyNames = new HashMap<>();

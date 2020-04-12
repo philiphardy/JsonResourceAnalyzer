@@ -4,13 +4,21 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
-import jsonresourceanalyzer.concurrency.WorkDispatcher;
+import java.io.IOException;
 import jsonresourceanalyzer.ArgParser;
 import jsonresourceanalyzer.ErrorCode;
+import jsonresourceanalyzer.concurrency.WorkDispatcher;
 import jsonresourceanalyzer.constants.ErrorMessages;
-import java.io.IOException;
 
+/**
+ * This class is responsible for reading the JSON from either the file or url provided.
+ */
 public class JsonReader {
+
+  private interface ReadWrapper {
+
+    Object read() throws IOException;
+  }
 
   private JsonParser jsonParser;
   private WorkDispatcher workDispatcher;
@@ -39,60 +47,61 @@ public class JsonReader {
     workDispatcher = new WorkDispatcher();
   }
 
+  /**
+   * Closes the input stream.
+   */
   private void close() {
     try {
       jsonParser.close();
     } catch (IOException ex) {
-      close();
       System.err.println(
-          String.format(ErrorMessages.UNKNOWN_ERROR_WHILE_CLOSING_STREAM, ex.getMessage()));
-      System.exit(ErrorCode.UNKNOWN_ERROR_WHILE_CLOSING_STREAM.getValue());
+          String.format(ErrorMessages.UNKNOWN_ERROR_WHILE_CLOSING_INPUT_STREAM, ex.getMessage())
+      );
+      System.exit(ErrorCode.UNKNOWN_ERROR_WHILE_CLOSING_INPUT_STREAM.getValue());
     }
   }
 
+  /**
+   * Reads the next token from the input stream.
+   * @return The next token.
+   */
   private JsonToken nextToken() {
-    try {
-      return jsonParser.nextToken();
-    } catch (IOException ex) {
-      close();
-      System.err.println(String.format(ErrorMessages.UNKNOWN_ERROR_WHILE_PARSING, ex.getMessage()));
-      System.exit(ErrorCode.UNKNOWN_ERROR_WHILE_PARSING.getValue());
-      return null;
-    }
+    return wrapRead(() -> jsonParser.nextToken(), JsonToken.class);
   }
 
+  /**
+   * Reads the next field name from the input stream.
+   * @return The next field name.
+   */
   private String nextFieldName() {
-    try {
-      return jsonParser.nextFieldName();
-    } catch (IOException ex) {
-      close();
-      System.err.println(String.format(ErrorMessages.UNKNOWN_ERROR_WHILE_PARSING, ex.getMessage()));
-      System.exit(ErrorCode.UNKNOWN_ERROR_WHILE_PARSING.getValue());
-      return null;
-    }
+    return wrapRead(() -> jsonParser.nextFieldName(), String.class);
   }
 
-  private <T> T nextValueByType(Class<T> type) {
-    try {
+  /**
+   * Reads the next value in the input stream as the type given.
+   *
+   * @param type String.class or Integer.class
+   * @return The next value
+   */
+  private Object nextValueByType(Class<?> type) {
+    return wrapRead(() -> {
       if (String.class.equals(type)) {
-        return (T) jsonParser.nextTextValue();
+        return jsonParser.nextTextValue();
       }
 
-      Integer integer = jsonParser.nextIntValue(-1);
+      int integer = jsonParser.nextIntValue(-1);
       if (integer == -1) {
         close();
         System.err.println(ErrorMessages.INVALID_JSON);
         System.exit(ErrorCode.INVALID_JSON.getValue());
       }
-      return (T) integer;
-    } catch (IOException ex) {
-      close();
-      System.err.println(String.format(ErrorMessages.UNKNOWN_ERROR_WHILE_PARSING, ex.getMessage()));
-      System.exit(ErrorCode.UNKNOWN_ERROR_WHILE_PARSING.getValue());
-      return null;
-    }
+      return integer;
+    });
   }
 
+  /**
+   * Reads the entire input stream.
+   */
   public void readFile() {
     if (nextToken() != JsonToken.START_ARRAY) {
       close();
@@ -122,6 +131,11 @@ public class JsonReader {
     close();
   }
 
+  /**
+   * Reads the next json object from the input stream as a InputJsonObject.
+   *
+   * @return The InputJsonObject
+   */
   private InputJsonObject readObject() {
     // make sure that there is nothing unexpected before attempting to read the next json object
     if (jsonParser.currentToken() != JsonToken.START_OBJECT) {
@@ -132,7 +146,7 @@ public class JsonReader {
 
     // grab the next 3 fields and add them to the InputJsonObject
     InputJsonObject inputJsonObject = new InputJsonObject();
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < InputJsonObject.validPropertyNames.size(); i++) {
 
       String fieldName = nextFieldName();
       validateProperty(fieldName);
@@ -152,6 +166,41 @@ public class JsonReader {
     return inputJsonObject;
   }
 
+  /**
+   * Attempts the wrapped read operation on the JSON input stream. If an IOException is thrown, it
+   * is logged and the system exits with the appropriate code.
+   *
+   * @param readWrapper Wrapper read operation
+   * @return The value returned by the readWrapper
+   */
+  private Object wrapRead(ReadWrapper readWrapper) {
+    return wrapRead(readWrapper, Object.class);
+  }
+
+  /**
+   * Attempts the wrapped read operation on the JSON input stream. If an IOException is thrown, it
+   * is logged and the system exits with the appropriate code.
+   *
+   * @param readWrapper Wrapper read operation
+   * @param returnType  Return type of the readWrapper
+   * @return The value returned by the readWrapper
+   */
+  private <T> T wrapRead(ReadWrapper readWrapper, Class<T> returnType) {
+    try {
+      return (T) readWrapper.read();
+    } catch (IOException ex) {
+      close();
+      System.err.println(String.format(ErrorMessages.UNKNOWN_ERROR_WHILE_PARSING, ex.getMessage()));
+      System.exit(ErrorCode.UNKNOWN_ERROR_WHILE_PARSING.getValue());
+      return null;
+    }
+  }
+
+  /**
+   * Validates the property name is a valid InputJsonObject property.
+   *
+   * @param propertyName Name of property from input stream
+   */
   private void validateProperty(String propertyName) {
     if (!InputJsonObject.isValidProperty(propertyName)) {
       close();

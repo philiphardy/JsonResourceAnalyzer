@@ -113,6 +113,10 @@ public class ArgParser {
     return file;
   }
 
+  public File getOutputFile() {
+    return outputFile;
+  }
+
   public URL getUrl() {
     return url;
   }
