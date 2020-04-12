@@ -148,7 +148,7 @@ public class ArgParser {
     try {
       url = new URL(urlArg);
     } catch (MalformedURLException ex) {
-      System.err.println(ErrorMessages.INVALID_URL);
+      System.err.println(String.format(ErrorMessages.INVALID_URL, urlArg));
       System.exit(ErrorCode.INVALID_URL.getValue());
     }
   }

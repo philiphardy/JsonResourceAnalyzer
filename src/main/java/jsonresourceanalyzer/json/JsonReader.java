@@ -7,7 +7,6 @@ import com.fasterxml.jackson.core.JsonToken;
 import java.io.IOException;
 import jsonresourceanalyzer.ArgParser;
 import jsonresourceanalyzer.ErrorCode;
-import jsonresourceanalyzer.concurrency.WorkDispatcher;
 import jsonresourceanalyzer.constants.ErrorMessages;
 
 /**
@@ -15,13 +14,40 @@ import jsonresourceanalyzer.constants.ErrorMessages;
  */
 public class JsonReader {
 
+  /**
+   * Event handler which is called by the JsonReader whenever an InputJsonObject has been read from
+   * the input stream.
+   */
+  public interface ObjectReadEventHandler {
+
+    void onObjectRead(InputJsonObject inputJsonObject);
+  }
+
+  /**
+   * Event handler which is called by the JsonReader when it finishes reading the input stream.
+   */
+  public interface ReadCompleteEventHandler {
+
+    void onReadComplete();
+  }
+
+  /**
+   * Event handler which is called by the JsonReader when it begins reading the input stream.
+   */
+  public interface ReadStartEventHandler {
+
+    void onReadStart();
+  }
+
   private interface ReadWrapper {
 
     Object read() throws IOException;
   }
 
   private JsonParser jsonParser;
-  private WorkDispatcher workDispatcher;
+  private ObjectReadEventHandler objectReadEventHandler;
+  private ReadCompleteEventHandler readCompleteEventHandler;
+  private ReadStartEventHandler readStartEventHandler;
 
   public JsonReader(ArgParser argParser) {
     JsonFactory jsonFactory = new JsonFactory();
@@ -43,8 +69,6 @@ public class JsonReader {
       );
       System.exit(ErrorCode.INVALID_INPUT_STREAM.getValue());
     }
-
-    workDispatcher = new WorkDispatcher();
   }
 
   /**
@@ -63,6 +87,7 @@ public class JsonReader {
 
   /**
    * Reads the next token from the input stream.
+   *
    * @return The next token.
    */
   private JsonToken nextToken() {
@@ -71,6 +96,7 @@ public class JsonReader {
 
   /**
    * Reads the next field name from the input stream.
+   *
    * @return The next field name.
    */
   private String nextFieldName() {
@@ -100,7 +126,42 @@ public class JsonReader {
   }
 
   /**
-   * Reads the entire input stream.
+   * Sets the ObjectReadEventHandler for this JsonReader and returns this JsonReader.
+   *
+   * @param objectReadEventHandler The object read event handler
+   * @return This JsonReader
+   */
+  public JsonReader onObjectRead(ObjectReadEventHandler objectReadEventHandler) {
+    this.objectReadEventHandler = objectReadEventHandler;
+    return this;
+  }
+
+  /**
+   * Sets the ReadCompleteEventHandler for this JsonReader and returns this JsonReader
+   *
+   * @param readCompleteEventHandler The read complete event handler
+   * @return This JsonReader
+   */
+  public JsonReader onReadComplete(ReadCompleteEventHandler readCompleteEventHandler) {
+    this.readCompleteEventHandler = readCompleteEventHandler;
+    return this;
+  }
+
+  /**
+   * Sets the ReadStartEventHandler for this JsonReader and returns this JsonReader
+   *
+   * @param readStartEventHandler The read complete event handler
+   * @return This JsonReader
+   */
+  public JsonReader onReadStart(ReadStartEventHandler readStartEventHandler) {
+    this.readStartEventHandler = readStartEventHandler;
+    return this;
+  }
+
+  /**
+   * Starts reading the input JSON stream and calls the objectReadEventHandler whenever an
+   * InputJsonObject is read. When the end of the input stream is reached, the
+   * readCompleteEventHandler is called.
    */
   public void readFile() {
     if (nextToken() != JsonToken.START_ARRAY) {
@@ -109,8 +170,18 @@ public class JsonReader {
       System.exit(ErrorCode.INVALID_JSON_FORMAT_NOT_ARRAY.getValue());
     }
 
+    // notify read start event handler that reading has begun
+    if (readStartEventHandler != null) {
+      readStartEventHandler.onReadStart();
+    }
+
     // advance the stream to the first json object in the array, or the end of the array (if it was an empty array)
     if (nextToken() == JsonToken.END_ARRAY) {
+      // notify read complete event handler that reading has completed
+      if (readCompleteEventHandler != null) {
+        readCompleteEventHandler.onReadComplete();
+      }
+
       close();
       return;
     }
@@ -118,6 +189,11 @@ public class JsonReader {
     // while the end of the stream hasn't been reached
     while (jsonParser.currentToken() != null) {
       InputJsonObject jsonObject = readObject();
+
+      // notify object read event handler that an object has been read
+      if (objectReadEventHandler != null) {
+        objectReadEventHandler.onObjectRead(jsonObject);
+      }
 
       // check if the end of the array has been reached
       // if it was ensure that the next token is the end of the file
@@ -129,6 +205,11 @@ public class JsonReader {
     }
 
     close();
+
+    // notify read complete event handler that reading has completed
+    if (readCompleteEventHandler != null) {
+      readCompleteEventHandler.onReadComplete();
+    }
   }
 
   /**
@@ -204,8 +285,8 @@ public class JsonReader {
   private void validateProperty(String propertyName) {
     if (!InputJsonObject.isValidProperty(propertyName)) {
       close();
-      System.err.println(ErrorMessages.INVALID_JSON);
-      System.exit(ErrorCode.INVALID_JSON.getValue());
+      System.err.println(String.format(ErrorMessages.UNKNOWN_PROPERTY, propertyName));
+      System.exit(ErrorCode.UNKNOWN_PROPERTY.getValue());
     }
   }
 }

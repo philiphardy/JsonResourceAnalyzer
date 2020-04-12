@@ -5,9 +5,10 @@ import jsonresourceanalyzer.constants.ErrorMessages;
 import java.util.HashMap;
 
 public class InputJsonObject {
-  private static final String PATH = "path";
-  private static final String SIZE = "size";
-  private static final String URL = "url";
+
+  protected static final String PATH = "path";
+  protected static final String SIZE = "size";
+  protected static final String URL = "url";
 
   protected static HashMap<String, Class<?>> validPropertyNames;
 
@@ -31,6 +32,18 @@ public class InputJsonObject {
   private Integer size;
   private String url;
 
+  public String getPath() {
+    return path;
+  }
+
+  public Integer getSize() {
+    return size;
+  }
+
+  public String getUrl() {
+    return url;
+  }
+
   public void setProperty(String name, Object value) {
     switch (name) {
       case PATH:
@@ -45,6 +58,20 @@ public class InputJsonObject {
       default:
         System.err.println(String.format(ErrorMessages.UNKNOWN_PROPERTY, name));
         System.exit(ErrorCode.UNKNOWN_PROPERTY.getValue());
+    }
+  }
+
+  public void setSize(Integer size) {
+    this.size = size;
+  }
+
+  /**
+   * Validates that this has no null fields.
+   */
+  public void validate() {
+    if (path == null || size == null || url == null) {
+      System.err.println(ErrorMessages.INVALID_JSON_INPUT_OBJECT);
+      System.exit(ErrorCode.INVALID_JSON_INPUT_OBJECT.getValue());
     }
   }
 }
