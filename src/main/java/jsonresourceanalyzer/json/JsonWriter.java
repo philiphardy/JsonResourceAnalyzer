@@ -8,7 +8,7 @@ import java.util.Collections;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import jsonresourceanalyzer.ArgParser;
-import jsonresourceanalyzer.ErrorCode;
+import jsonresourceanalyzer.enums.ErrorCode;
 import jsonresourceanalyzer.constants.ErrorMessages;
 
 /**
@@ -106,12 +106,10 @@ public class JsonWriter {
       jsonGenerator.writeStartObject();
 
       // write size property
-      jsonGenerator.writeFieldName(InputJsonObject.SIZE);
-      jsonGenerator.writeNumber(inputJsonObject.getSize());
+      jsonGenerator.writeNumberField(InputJsonObject.SIZE, inputJsonObject.getSize());
 
       // write url property
-      jsonGenerator.writeFieldName(InputJsonObject.URL);
-      jsonGenerator.writeString(inputJsonObject.getUrl());
+      jsonGenerator.writeStringField(InputJsonObject.URL, inputJsonObject.getUrl());
 
       jsonGenerator.writeEndObject();
     });

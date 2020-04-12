@@ -1,4 +1,4 @@
-package jsonresourceanalyzer;
+package jsonresourceanalyzer.enums;
 
 public enum ErrorCode {
     INVALID_ARGUMENTS,

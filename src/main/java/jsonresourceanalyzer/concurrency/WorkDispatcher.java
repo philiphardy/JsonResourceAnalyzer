@@ -3,7 +3,7 @@ package jsonresourceanalyzer.concurrency;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadPoolExecutor;
-import jsonresourceanalyzer.ErrorCode;
+import jsonresourceanalyzer.enums.ErrorCode;
 import jsonresourceanalyzer.constants.ErrorMessages;
 
 public class WorkDispatcher {

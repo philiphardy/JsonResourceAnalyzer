@@ -6,6 +6,7 @@ import jsonresourceanalyzer.constants.ErrorMessages;
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
+import jsonresourceanalyzer.enums.ErrorCode;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;

@@ -1,6 +1,6 @@
 package jsonresourceanalyzer.json;
 
-import jsonresourceanalyzer.ErrorCode;
+import jsonresourceanalyzer.enums.ErrorCode;
 import jsonresourceanalyzer.constants.ErrorMessages;
 import java.util.HashMap;
 

@@ -6,7 +6,7 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import java.io.IOException;
 import jsonresourceanalyzer.ArgParser;
-import jsonresourceanalyzer.ErrorCode;
+import jsonresourceanalyzer.enums.ErrorCode;
 import jsonresourceanalyzer.constants.ErrorMessages;
 
 /**
