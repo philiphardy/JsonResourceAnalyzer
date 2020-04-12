@@ -17,6 +17,7 @@ public class ErrorMessages {
   public static final String INVALID_URL = "The URL=(%s) is invalid.";
   public static final String UNKNOWN_ERROR_WHILE_CLOSING_INPUT_STREAM = "An unknown error occurred while closing the input JSON stream. Caused by:\n%s";
   public static final String UNKNOWN_ERROR_WHILE_CLOSING_OUTPUT_STREAM = "An unknown error occurred while closing the output JSON stream. Caused by:\n%s";
+  public static final String UNKNOWN_ERROR_WHILE_CLOSING_URL_INPUT_STREAM = "An unknown error occurred while closing the output JSON stream. Caused by:\n%s";
   public static final String UNKNOWN_ERROR_WHILE_OPENING_OUTPUT_FILE = "An unknown error occurred while opening the output file for writing. Caused by:\n%s";
   public static final String UNKNOWN_ERROR_WHILE_OPENING_URL_STREAM = "An unknown error occurred while opening the stream for URL=(%s). Caused by:\n%s";
   public static final String UNKNOWN_ERROR_WHILE_PARSING = "An unknown error occurred while parsing the JSON. Caused by:\n%s";

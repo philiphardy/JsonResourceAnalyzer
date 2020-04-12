@@ -11,37 +11,36 @@ import jsonresourceanalyzer.constants.ErrorMessages;
  * This class is responsible for validating a InputJsonObject.
  */
 public class InputJsonObjectValidator {
-  public static void validateJsonObject(InputJsonObject inputJsonObject) {
+
+  public static void validate(InputJsonObject inputJsonObject) {
     new InputJsonObjectValidator(inputJsonObject).validate();
   }
 
   private static final int MAX_ATTEMPTS = 5;
   private static final int EOF = -1;
-  private static final int READ_MAX_BYTES = 10000;
 
-  private final byte[] buffer;
   private final InputJsonObject inputJsonObject;
 
   private InputJsonObjectValidator(InputJsonObject inputJsonObject) {
-    this.buffer = new byte[READ_MAX_BYTES];
     this.inputJsonObject = inputJsonObject;
   }
 
   /**
    * Counts the size of the resource pointed to by the URL in bytes.
+   *
    * @return The integer size in bytes
    */
   private int countUrlResourceSizeInBytes() {
     InputStream urlInputStream = openUrlInputStream();
-    int urlResourceSize = 0;
 
     // read bytes from the url stream until the end of the file is reached
-    int bytesRead = 0;
-    while (bytesRead != EOF) {
+    int urlResourceSize = 0;
+    int byteRead = 0;
+    while (byteRead != EOF) {
       try {
-        bytesRead = urlInputStream.read(buffer);
-        if (bytesRead != EOF) {
-          urlResourceSize += bytesRead;
+        byteRead = urlInputStream.read();
+        if (byteRead != EOF) {
+          urlResourceSize++;
         }
       } catch (IOException ex) {
         System.err.println(
@@ -55,11 +54,21 @@ public class InputJsonObjectValidator {
       }
     }
 
+    try {
+      urlInputStream.close();
+    } catch (IOException ex) {
+      System.err.println(
+          String.format(ErrorMessages.UNKNOWN_ERROR_WHILE_CLOSING_URL_INPUT_STREAM, ex.getMessage())
+      );
+      System.exit(ErrorCode.UNKNOWN_ERROR_WHILE_CLOSING_URL_STREAM.getValue());
+    }
+
     return urlResourceSize;
   }
 
   /**
    * Opens an input stream from the URL.
+   *
    * @return The URL's input stream
    */
   private InputStream openUrlInputStream() {

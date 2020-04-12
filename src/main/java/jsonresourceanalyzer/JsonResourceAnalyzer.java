@@ -20,7 +20,7 @@ public class JsonResourceAnalyzer {
           // perform validation and writing to the output json stream on a worker thread
           workDispatcher.dispatch(() -> {
             // validate the json object
-            InputJsonObjectValidator.validateJsonObject(inputJsonObject);
+            InputJsonObjectValidator.validate(inputJsonObject);
 
             // write the json object to the output stream
             jsonWriter.writeObject(inputJsonObject);
